@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>p5.js RGB Mixer - Pointer Added</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.js"></script>
+    <style>
+        body { margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; background-color: #1a1a1a; font-family: sans-serif; }
+        canvas { border: 1px solid #444; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+    </style>
+</head>
+<body>
+<script>
+let r = 127, g = 127, b = 127;
+let savedHex = "#7F7F7F";
+const w = 400;
+const h = 500;
+const circleX = 200; 
+const circleY = 280; 
+const circleR = 150;
+
+function setup() {
+  createCanvas(w, h);
+}
+
+function draw() {
+  background(30);
+
+  textSize(28);
+  textAlign(CENTER,); // 水平中央、(垂直中央)
+  fill(savedHex);
+  text("中九州製作所です", w/2, 25);
+
+  let d = dist(mouseX, mouseY, circleX, circleY);
+
+  // 1. マウスが円の中にある時の処理
+  if (d < circleR / 2) {
+    let normD = map(d, 0, circleR / 2, 0, 1);
+    let whiteBase = map(normD, 0, 1, 255, 0);
+    let angle = atan2(mouseY - circleY, mouseX - circleX);
+    
+    let rWeight = max(0, map(sin(angle), -1, -0.2, 1, 0));
+    let gWeight = max(0, map(cos(angle + QUARTER_PI), -1, 0, 1, 0));
+    let bWeight = max(0, map(cos(angle - QUARTER_PI), 0, 1, 0, 1));
+
+    let colorSpread = map(normD, 0, 1, 0, 255);
+
+    r = whiteBase + (rWeight * colorSpread);
+    g = whiteBase + (gWeight * colorSpread);
+    b = whiteBase + (bWeight * colorSpread);
+  }
+
+  r = constrain(r, 0, 255);
+  g = constrain(g, 0, 255);
+  b = constrain(b, 0, 255);
+
+  // 2. UI（スライダー）
+  drawSlider(60, 60, r, "R", color(255, 50, 50));
+  drawSlider(60, 90, g, "G", color(50, 255, 50));
+  drawSlider(60, 120, b, "B", color(50, 50, 255));
+
+  // 3. メインの円
+  fill(r, g, b);
+  noStroke();
+  ellipse(circleX, circleY, circleR);
+  fill(255, 255, 255);
+  text("R", 195, 190);
+  text("G", 120, 325);
+  text("B", 270, 325);
+  
+  // ガイド（外枠）
+  stroke(255, 20);
+  noFill();
+  ellipse(circleX, circleY, circleR);
+
+  // --- 追加：マウスポインタの表示（円の中だけの時） ---
+  if (d < circleR / 2) {
+    stroke(255 - r, 255 - g, 255 - b); // 背景色の反対色で見やすく
+    strokeWeight(2);
+    line(mouseX - 5, mouseY, mouseX + 5, mouseY);
+    line(mouseX, mouseY - 5, mouseX, mouseY + 5);
+    noFill();
+    ellipse(mouseX, mouseY, 10);
+    strokeWeight(1); // 線の太さを戻す
+  }
+
+  // 4. 保存エリア
+  fill(45);
+  noStroke();
+  rect(0, 420, w, 80);
+  fill(150);
+  textSize(12);
+  text("LAST SAVED COLOR (CLICK TO UPDATE)", 20, 445);
+  
+  fill(savedHex);
+  stroke(255, 50);
+  rect(20, 455, 40, 25, 5);
+  
+  noStroke();
+  fill(255);
+  textSize(22);
+  textFont('Courier New');
+  text(savedHex, 75, 475);
+}
+
+function mousePressed() {
+  savedHex = "#" + hex(floor(r), 2) + hex(floor(g), 2) + hex(floor(b), 2);
+}
+
+function drawSlider(x, y, val, label, col) {
+  fill(200); noStroke(); textSize(14); textAlign(RIGHT, CENTER);
+  text(label, x - 15, y + 10);
+  fill(60); rect(x, y, 255, 20, 10);
+  fill(col); rect(x, y, val, 20, 10);
+  fill(255); textAlign(LEFT, CENTER);
+  text(floor(val), x + 265, y + 10);
+}
+</script>
+</body>
+</html>
